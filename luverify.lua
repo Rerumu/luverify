@@ -457,9 +457,12 @@ local function validate_header(s)
 	local last_pc = #pt.code
 	local last_line = #pt.lines
 
+	local has_arg = pt.is_vararg & 1 ~= 0
+	local needs_arg = pt.is_vararg & 4 ~= 0
+
 	fail_if_not(s, pt.max_stack_size <= MAX_REG, ERR.TOO_MANY_REG)
-	fail_if_not(s, pt.is_vararg == 0 or pt.is_vararg == 1, ERR.WRONG_VARARG)
-	fail_if_not(s, pt.numparams + (pt.is_vararg ~= 0 and 1 or 0) <= MAX_REG, ERR.TOO_MANY_PARAM)
+	fail_if_not(s, not needs_arg or has_arg, ERR.WRONG_VARARG)
+	fail_if_not(s, pt.numparams + (pt.is_vararg & 1) <= MAX_REG, ERR.TOO_MANY_PARAM)
 	fail_if_not(s, pt.numupvals <= #pt.upvals, ERR.TOO_MANY_UPV_D)
 	fail_if_not(s, last_line == last_pc or last_line == 0, ERR.WRONG_LINE)
 	fail_if_not(s, last_pc ~= 0 and pt.code[last_pc].op == OP.RETURN, ERR.WRONG_END)
@@ -600,7 +603,7 @@ local function validate_code(s)
 				fail_if_not(s, ps == OP.MOVE or ps == OP.GETUPVAL, ERR.WRONG_CAPTURE)
 			end
 		elseif op == OP.VARARG then
-			local is_vararg = pt.is_vararg & 2 ~= 0;
+			local is_vararg = pt.is_vararg & 2 ~= 0
 			local needs_arg = pt.is_vararg & 4 ~= 0
 
 			fail_if_not(s, is_vararg and not needs_arg, ERR.BAD_VARARG)
